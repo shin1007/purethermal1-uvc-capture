@@ -153,23 +153,23 @@ def readTemp(unit, state):
         elif unit == 'C':
             return (str(ktoc(maxVal)) + ' ' + unit)
         else:
-            display('What are you asking for?')
+            print('What are you asking for?')
     elif state == 'min':
         if unit == 'F':
             return (str(ktof(minVal)) + ' ' + unit)
         elif unit == 'C':
             return (str(ktoc(minVal)) + ' ' + unit)
         else:
-            display('What are you asking for?')
+            print('What are you asking for?')
     elif state == 'none':
         if unit == 'F':
             return (str(ktof(cursorVal)) + ' ' + unit)
         elif unit == 'C':
             return (str(ktoc(cursorVal)) + ' ' + unit)
         else:
-            display('What are you asking for?')
+            print('What are you asking for?')
     else:
-        display('What are you asking for?')
+        print('What are you asking for?')
 
 def readTempInt(unit, state):
     if state == 'max':
@@ -178,28 +178,45 @@ def readTempInt(unit, state):
         elif unit == 'C':
             return ktoc(maxVal)
         else:
-            display('What are you asking for?')
+            print('What are you asking for?')
     elif state == 'min':
         if unit == 'F':
             return ktof(minVal)
         elif unit == 'C':
             return ktoc(minVal)
         else:
-            display('What are you asking for?')
+            print('What are you asking for?')
     elif state == 'none':
         if unit == 'F':
             return ktof(cursorVal)
         elif unit == 'C':
             return ktoc(cursorVal)
         else:
-            display('What are you asking for?')
+            print('What are you asking for?')
     else:
-        display('What are you asking for?')
+        print('What are you asking for?')
 
-def raw_to_8bit(data):
-    cv2.normalize(data, data, 0, 65535, cv2.NORM_MINMAX)
-    np.right_shift(data, 8, data)
-    return cv2.cvtColor(np.uint8(data), cv2.COLOR_GRAY2RGB)
+def raw_to_8bit(data, highTempLimit, lowTempLimit):
+	#print(data)
+	#print(np.max(data))
+	#print(np.min(data))
+	highTempLimit = 555 #kelvin
+	lowTempLimit = 260 #kelvin
+	agcLimit = 65535
+	if (1 == 1):
+		slope = agcLimit/(highTempLimit - lowTempLimit)
+		agcLimit = slope*(np.max(data)/100) - slope*lowTempLimit
+		agcLowLimit = slope*(np.min(data)/100) - slope*lowTempLimit
+		#print(agcLimit)
+	cv2.normalize(data, data, agcLowLimit, agcLimit, cv2.NORM_MINMAX) #65535
+	#print('Normalized')
+	#print(data)
+	#print(np.max(data))
+	np.right_shift(data, 8, data)
+	#print('Shifted')
+	#print(data)
+	#print(np.max(data))
+	return cv2.cvtColor(np.uint8(data), cv2.COLOR_GRAY2RGB)
 
 frame = 1
 videoState = 'notPlay'
@@ -567,7 +584,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		#print('Display Image at Frame: ' + str(frame))
 		data = self.f_read[('image'+str(frame))][:]
 		data = cv2.resize(data[:,:], (640, 480))
-		img = cv2.LUT(raw_to_8bit(data), generate_colour_map())
+		img = cv2.LUT(raw_to_8bit(data, 0, 0), generate_colour_map())
 		img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		rgbImage = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
 		return(rgbImage)
@@ -663,7 +680,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		data = self.f_read[('image'+str(frame))][:]
 		data = cv2.resize(data[:,:], (640, 480))
 		minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
-		img = cv2.LUT(raw_to_8bit(data), generate_colour_map())
+		img = cv2.LUT(raw_to_8bit(data, 0, 0), generate_colour_map())
 		rgbImage = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		#rgbImage = img #blue is hot
 		self.ax = self.figure.add_subplot(111)
