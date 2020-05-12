@@ -150,7 +150,8 @@ class Window(QMainWindow, Ui_MainWindow):
         save_as.to_png('test.png', saveframe, colorMapType)
 
     def save_tiffs(self):
-        save_as.to_tiffs('test.csv', self.f_read, frame, editLastFrame)
+        data = heat_data(fileSelected)
+        save_as.to_tiffs('test.tiff', data, frame, editLastFrame)
 
     def save_avi(self):
         data = heat_data(fileSelected)

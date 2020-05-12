@@ -8,17 +8,13 @@ from tifffile import imsave
 
 
 def to_avi(savepath, data, colormap, start, end):
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     try:
-        print(savepath, data, colormap, start, end)
-        out = cv2.VideoWriter(savepath, fourcc, 8.7, (640, 480), True)
-        print('bb')
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        fps = 8.7
+        out = cv2.VideoWriter(savepath, fourcc, fps, (640, 480), True)
         for i in range(start, end):
-            print(i)
             frame = data.frame(i, 640, 480)
-            print('cc')
             out.write(colors.colorize(frame, colormap))
-        print('dd')
         out.release()
         print('Saved ' + savepath)
     except:
