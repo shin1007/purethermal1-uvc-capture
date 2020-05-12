@@ -73,7 +73,7 @@ def get_temp_with_unit(unit, state):
         result = maxVal
     elif state == 'min':
         result = minVal
-    elif(state == none):
+    elif(state == 'none'):
         result = cursorVal
     else:
         display('What are you asking for?')
@@ -200,19 +200,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.canvas.draw()
 
     def setSlider(self):
-        print('A')
         self.sl.setEnabled(True)
-        print('B')
         self.sl.setMinimum(1)
-        print('C')
         self.sl.setMaximum(lastFrame)
-        print('D')
         self.sl.setValue(1)
-        print('E')
         self.sl.setTickPosition(QSlider.TicksBelow)
-        print('F')
         self.sl.setTickInterval(9)
-        print('G')
         self.slStartF.setText('First Frame: 1')
         self.slMidF.setText('Mid Frame: ' + str(round(lastFrame/2)))
         self.slEndF.setText('Last Frame: ' + str(lastFrame))
@@ -413,28 +406,17 @@ class Window(QMainWindow, Ui_MainWindow):
             self.dispSelectedFile.setText(fileSelected)
         if fileSelected != "":
             try:
-                print('a')
                 self.dispSelectedFile.setText(fileSelected)
-                print('b')
                 self.f_read = h5py.File(str(fileSelected), 'r')
-                print('c')
                 frame = 1
-                print('d')
                 self.dispImg()
-                print('e')
                 self.enableThings()
-                print('f')
                 self.setSlider()
-                print('g')
                 editLastFrame = lastFrame
-                print('h')
                 self.startEdit.setText(str(frame))
-                print('i')
                 self.stopEdit.setText(str(lastFrame))
-                print('j')
                 self.history.insertPlainText(
                     'Selected File and Displayed First Frame\n')
-                print('k')
                 self.history.moveCursor(QTextCursor.End)
                 print('Selected File and Displayed First Frame')
                 self.canvas.draw()
