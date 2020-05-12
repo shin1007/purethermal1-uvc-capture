@@ -6,7 +6,7 @@ class heat_data(object):
     def __init__(self, fullpath):
         self.__fullpath = fullpath
         self.__raw_data = h5py.File(fullpath, 'r')
-        self.__last_frame = len(self.__raw_data)
+        self.__last_frame = len(self.__raw_data) + 1
 
     @property
     def fullpath(self):
@@ -22,4 +22,6 @@ class heat_data(object):
 
     def frame(self, num, width, height):
         raw_frame = self.raw_data[('image' + str(num))][:]
-        return cv2.resize(raw_frame, (640, 480))
+        if(width == 0 or height == 0):
+            return raw_frame
+        return cv2.resize(raw_frame, (width, height))

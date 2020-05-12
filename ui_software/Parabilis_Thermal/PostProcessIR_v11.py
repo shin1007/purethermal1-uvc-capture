@@ -151,7 +151,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def save_tiffs(self):
         data = heat_data(fileSelected)
-        save_as.to_tiffs('test.tiff', data, frame, editLastFrame)
+        save_as.to_tiffs('test.tif', data, colorMapType, frame, editLastFrame)
 
     def save_avi(self):
         data = heat_data(fileSelected)

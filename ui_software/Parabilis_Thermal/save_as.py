@@ -5,6 +5,7 @@ import tifffile
 import cv2
 import numpy as np
 from tifffile import imsave
+from PIL import Image, TiffImagePlugin
 
 
 def to_avi(savepath, data, colormap, start, end):
@@ -22,15 +23,16 @@ def to_avi(savepath, data, colormap, start, end):
     return
 
 
-def to_tiffs(savepath, data, start, end):
-    for i in range(start, end):
-        frame = data.frame(i, 640, 480)
-        if i == 1:
-            dataCollection = data
-        else:
-            dataCollection = np.dstack((dataCollection, data))
+def to_tiffs(savepath, data, colormap, start, end):
     try:
-        imsave(savepath, dataCollection)
+        images = []
+        for i in range(1, data.last_frame):
+            frame = data.frame(i, 640, 480)
+            img = colors.colorize(frame, colormap)
+            images.append(Image.fromarray(img))
+
+        images[0].save(savepath, compression='tiff_deflate',
+                       save_all=True, append_images=images[1:])
         print('Saved ' + savepath)
     except:
         print('Error while saving ' + savepath)
@@ -39,7 +41,9 @@ def to_tiffs(savepath, data, start, end):
 
 def to_tiff(savepath, frame):
     try:
-        imsave(savepath, frame)
+        tmp = Image.fromarray(frame)
+        tmp.save(savepath, compression='tiff_lzw',
+                 save_all=True)
         print('Saved ' + savepath)
     except:
         print('Error while saving ' + savepath)
