@@ -39,11 +39,10 @@ def to_tiffs(savepath, data, colormap, start, end):
     return
 
 
-def to_tiff(savepath, frame):
+def to_tiff(savepath, frame, colormap):
     try:
-        tmp = Image.fromarray(frame)
-        tmp.save(savepath, compression='tiff_lzw',
-                 save_all=True)
+        img = colors.colorize(frame, colormap)
+        img.save(savepath, compression='tiff_deflate', save_all=True)
         print('Saved ' + savepath)
     except:
         print('Error while saving ' + savepath)
