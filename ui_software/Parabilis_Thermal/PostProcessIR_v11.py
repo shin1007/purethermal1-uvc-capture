@@ -51,7 +51,6 @@ toggleUnitState = 'C'
 current_frame = 1
 framerate = 1  # (1/9 frames per second), do not adjust
 timerHz = 115  # ms 1/8.7 = 0.1149 sec, decrease to increase speed
-fileSelected = ""
 usedOnce = True
 start_frame = 1
 stop_frame = 2
@@ -90,6 +89,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
+        self.h5data = ""
         self.setupUi(self)
         self.initUI()
 
@@ -104,9 +104,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dispLayout.addWidget(self.canvas)
 
         # buttons
-        self.nextFrame.clicked.connect(self.dispNextImg)
-        self.prevFrame.clicked.connect(self.dispPrevImg)
-        self.selectFileBut.clicked.connect(self.getFile)
+        self.nextFrame.clicked.connect(self.to_next_frame)
+        self.prevFrame.clicked.connect(self.to_previous_frame)
+        self.selectFileBut.clicked.connect(self.dialog_file_select)
         self.playVidBut.clicked.connect(self.play)
         self.makeTiffBut.clicked.connect(self.save_tiffs)
 
@@ -144,8 +144,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.timer.setInterval(timerHz)
         self.timer.timeout.connect(self.playVid5)
 
-        if (len(sys.argv) > 1):
-            self.getFile()
+        if (len(sys.argv) > 1) and (usedOnce == True):
+            self.command_line_file_select()
 
     def renew_start_frame(self):
         global start_frame
@@ -161,6 +161,7 @@ class Window(QMainWindow, Ui_MainWindow):
         except:
             pass
 
+    # saving functions
     def save_png(self):
         saveframe = self.h5data.frame(current_frame, 640, 480)
         save_as.to_png('test.png', saveframe, colorMapType)
@@ -173,49 +174,49 @@ class Window(QMainWindow, Ui_MainWindow):
         save_as.to_avi('test.avi', self.h5data,
                        colorMapType, start_frame, stop_frame)
 
+    # color functions (on radiobutton click)
     def to_ironblack(self):
         global colorMapType
         colorMapType = 'ironblack'
-        self.dispNextImg()
-        self.dispPrevImg()
+        self.renew_image()
         self.logger('Changed Color Map')
 
     def to_rainbow(self):
         global colorMapType
         colorMapType = 'rainbow'
-        self.dispNextImg()
-        self.dispPrevImg()
+        self.renew_image()
         self.logger('Changed Color Map')
 
     def to_grayscale(self):
         global colorMapType
         colorMapType = 'grayscale'
-        self.dispNextImg()
-        self.dispPrevImg()
+        self.renew_image()
         self.logger('Changed Color Map')
 
+    # temperature functions (on radiobutton click)
     def in_Celsius(self):
         global toggleUnitState
         toggleUnitState = 'C'
-        self.dispImg()
+        self.renew_image()
         self.logger('Display ' + str(toggleUnitState))
 
     def in_fahrenheit(self):
         global toggleUnitState
         toggleUnitState = 'F'
-        self.dispImg()
+        self.renew_image()
         self.logger('Display ' + str(toggleUnitState))
 
     def in_Kelvin(self):
         global toggleUnitState
         toggleUnitState = 'K'
-        self.dispImg()
+        self.renew_image()
         self.logger('Display ' + str(toggleUnitState))
 
+    # slider functions
     def slValueChange(self):
         global current_frame
         current_frame = self.sl.value()
-        self.dispImg()
+        self.renew_image()
         self.canvas.draw()
 
     def setSlider(self):
@@ -231,9 +232,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.slMidT.setText(str(round(last_frame/(2*9), 1)) + ' Seconds')
         self.slEndT.setText(str(round(last_frame/9, 1)) + ' Seconds')
 
+    # on hovering on the picture
     def grabTempValue(self, xMouse, yMouse):
-        data = self.h5data.frame(current_frame, 640, 480)
-        return data[yMouse, xMouse]
+        frame = self.h5data.frame(current_frame, 640, 480)
+        return frame[yMouse, xMouse]
 
     def hover(self, event):
         if event.xdata != None:
@@ -245,13 +247,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.cursorTempLabel.setText('Cursor Temp: MOVE CURSOR OVER IMAGE')
 
-    def grabDataFrame(self):
-        data = self.h5data.frame(current_frame, 640, 480)
-        img = colors.colorize(data, colorMapType)
-        img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        rgbImage = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
-        return(rgbImage)
-
+    # video playing functions
     def frame_setting_ng(self):
         if(1 <= start_frame and start_frame <= last_frame
             and start_frame <= stop_frame
@@ -264,24 +260,20 @@ class Window(QMainWindow, Ui_MainWindow):
     def play(self):
         if(self.frame_setting_ng()):
             return
-        global current_frame
-        self.logger('Play Video')
-        current_frame = start_frame
-        print('Starting at Frame: ' + str(start_frame))
-        if fileSelected != "":
-            self.timer.start()
 
-    def pauseVideo(self):
-        self.timer.stop()
-        self.logger('Paused Video')
+        global current_frame
+        current_frame = start_frame
+
+        self.logger('Playing video from Frame: ' + str(start_frame))
+        if self.h5data != "":
+            self.timer.start()
 
     def playVid5(self):
         self.move_frame(1)
 
-    def dispNextImg(self):
-        self.logger('Next Frame: ' + str(current_frame))
-        if fileSelected != "":
-            self.move_frame(1)
+    def pauseVideo(self):
+        self.timer.stop()
+        self.logger('Paused Video')
 
     def move_frame(self, val):
         global current_frame
@@ -290,25 +282,33 @@ class Window(QMainWindow, Ui_MainWindow):
                 or(val > 0 and current_frame < frame_to_stop)):
             current_frame += val
             self.sl.setValue(current_frame)
-            self.dispImg()
+            self.renew_image()
             if current_frame == frame_to_stop:
                 self.pauseVideo()
         else:
             pass
 
-    def dispPrevImg(self):
-        self.logger('Previous Frame: ' + str(current_frame))
-        if fileSelected != "":
+    def to_previous_frame(self):
+        if self.h5data != "":
             self.move_frame(-1)
+            self.logger('Previous Frame: ' + str(current_frame))
 
-    def dispImg(self):
-        global last_frame
+    def to_next_frame(self):
+        if self.h5data != "":
+            self.move_frame(1)
+            self.logger('Next Frame: ' + str(current_frame))
+
+    # drawing images
+    def renew_image(self):
         try:
-            data = self.h5data.frame(current_frame, 640, 480)
+            if current_frame == 1:
+                self.figure.tight_layout()
+
             self.currentFrameDisp.setText(
                 'Current Frame: ' + str(current_frame))
 
-            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
+            frame = self.h5data.frame(current_frame, 640, 480)
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(frame)
             self.maxTempLabel.setText(
                 'Current Max Temp: ' + get_temp_with_unit(maxVal, toggleUnitState))
             self.maxTempLocLabel.setText('Max Temp Loc: ' + str(maxLoc))
@@ -316,15 +316,13 @@ class Window(QMainWindow, Ui_MainWindow):
                 'Current Min Temp: ' + get_temp_with_unit(minVal, toggleUnitState))
             self.minTempLocLabel.setText('Min Temp Loc: ' + str(minLoc))
 
-            img = colors.colorize(data, colorMapType)
+            img = colors.colorize(frame, colorMapType)
             rgbImage = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
             self.ax = self.figure.add_subplot(111)
             self.ax.clear()
-
-            if current_frame == 1:
-                self.figure.tight_layout()
             self.cax = self.ax.imshow(rgbImage)
-            last_frame = self.h5data.last_frame
+
             self.sl.setValue(current_frame)
             self.currentTimeLabel.setText(
                 'Current Time: ' + str(round(((current_frame-1)/9.00), 2)))
@@ -333,10 +331,11 @@ class Window(QMainWindow, Ui_MainWindow):
             pass
 
     def colorBarDisplay(self):
-        if(fileSelected == ''):
+        if(self.h5data == ''):
             return
-        rgbImage = self.grabDataFrame()
-        rgbImage = cv2.cvtColor(rgbImage, cv2.COLOR_BGR2RGB)
+        data = self.h5data.frame(current_frame, 640, 480)
+        img = colors.colorize(data, colorMapType)
+        rgbImage = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         C = colors.get_color_map(colorMapType)
         C = np.squeeze(C)
         C = C[..., ::-1]
@@ -355,46 +354,41 @@ class Window(QMainWindow, Ui_MainWindow):
             '     [$^\circ$' + toggleUnitState + ']', rotation=0)  # 270
         plt.show()
 
+    # file selection
     def command_line_file_select(self):
-        global fileSelected
         global usedOnce
         print("First file specified from command line")
-        fileSelected = sys.argv[1]
+        path = sys.argv[1]
         usedOnce = False
+        self.open_file(path)
 
     def dialog_file_select(self):
-        global fileSelected
-        lastFileSelected = ""
-        if fileSelected != "":
-            lastFileSelected = fileSelected
-        fileSelected = ""
         dlg = QFileDialog()
         dlg.setDefaultSuffix('.HDF5')
-        fileSelected, filter = dlg.getOpenFileName(
-            self, 'Open File', lastFileSelected, 'HDF5 (*.HDF5);; All Files (*)')
-        print(fileSelected)
-        self.dispSelectedFile.setText(fileSelected)
+        path, filter = dlg.getOpenFileName(
+            self, 'Open File', "", 'HDF5 (*.HDF5);; All Files (*)')
+        print(path)
+        self.dispSelectedFile.setText(path)
+        self.open_file(path)
 
     def logger(self, text: str):
         self.history.insertPlainText(text + '\n')
         self.history.moveCursor(QTextCursor.End)
         print(text)
 
-    def getFile(self):
+    def open_file(self, path):
         global current_frame
+        global last_frame
         global stop_frame
-        if (len(sys.argv) > 1) and (usedOnce == True):
-            self.command_line_file_select()
-        else:
-            self.dialog_file_select()
-        if fileSelected != "":
+        if path != "":
             try:
-                self.dispSelectedFile.setText(fileSelected)
-                self.h5data = heat_data(fileSelected)
+                self.dispSelectedFile.setText(path)
+                self.h5data = heat_data(path)
                 current_frame = 1
-                self.dispImg()
-                self.setSlider()
+                last_frame = self.h5data.last_frame
                 stop_frame = last_frame
+                self.renew_image()
+                self.setSlider()
                 self.startEdit.setText(str(current_frame))
                 self.stopEdit.setText(str(last_frame))
                 self.logger('Selected File and Displayed First Frame')

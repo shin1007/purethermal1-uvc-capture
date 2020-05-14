@@ -6,7 +6,7 @@ class heat_data(object):
     def __init__(self, fullpath):
         self.__fullpath = fullpath
         self.__raw_data = h5py.File(fullpath, 'r')
-        self.__last_frame = len(self.__raw_data) + 1
+        self.__last_frame = len(self.__raw_data)
 
     @property
     def fullpath(self):
