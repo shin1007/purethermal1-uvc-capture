@@ -49,11 +49,10 @@ warnings.filterwarnings("ignore")
 toggleUnitState = 'C'
 
 current_frame = 1
-videoState = 'notPlay'
 framerate = 1  # (1/9 frames per second), do not adjust
 timerHz = 115  # ms 1/8.7 = 0.1149 sec, decrease to increase speed
 fileSelected = ""
-usedOnce = 1
+usedOnce = True
 start_frame = 1
 stop_frame = 2
 last_frame = 3
@@ -144,7 +143,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.timer = QTimer(self)
         self.timer.setInterval(timerHz)
         self.timer.timeout.connect(self.playVid5)
-        self.timer.start()
 
         if (len(sys.argv) > 1):
             self.getFile()
@@ -180,45 +178,39 @@ class Window(QMainWindow, Ui_MainWindow):
         colorMapType = 'ironblack'
         self.dispNextImg()
         self.dispPrevImg()
-        self.history.insertPlainText('Changed Color Map\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Changed Color Map')
 
     def to_rainbow(self):
         global colorMapType
         colorMapType = 'rainbow'
         self.dispNextImg()
         self.dispPrevImg()
-        self.history.insertPlainText('Changed Color Map\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Changed Color Map')
 
     def to_grayscale(self):
         global colorMapType
         colorMapType = 'grayscale'
         self.dispNextImg()
         self.dispPrevImg()
-        self.history.insertPlainText('Changed Color Map\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Changed Color Map')
 
     def in_Celsius(self):
         global toggleUnitState
         toggleUnitState = 'C'
         self.dispImg()
-        self.history.insertPlainText('Display ' + str(toggleUnitState) + '\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Display ' + str(toggleUnitState))
 
     def in_fahrenheit(self):
         global toggleUnitState
         toggleUnitState = 'F'
         self.dispImg()
-        self.history.insertPlainText('Display ' + str(toggleUnitState) + '\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Display ' + str(toggleUnitState))
 
     def in_Kelvin(self):
         global toggleUnitState
         toggleUnitState = 'K'
         self.dispImg()
-        self.history.insertPlainText('Display ' + str(toggleUnitState) + '\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Display ' + str(toggleUnitState))
 
     def slValueChange(self):
         global current_frame
@@ -266,43 +258,30 @@ class Window(QMainWindow, Ui_MainWindow):
                 and stop_frame <= last_frame):
             return False
         else:
-            print('Frame setting is wrong')
-            self.history.insertPlainText('Frame setting is wrong\n')
+            self.logger('Frame setting is wrong')
             return True
 
     def play(self):
         if(self.frame_setting_ng()):
             return
         global current_frame
-        global videoState
-        self.history.insertPlainText('Play Video\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Play Video')
         current_frame = start_frame
         print('Starting at Frame: ' + str(start_frame))
         if fileSelected != "":
             self.timer.start()
-            videoState = 'play'
 
     def pauseVideo(self):
-        self.history.insertPlainText('Paused Video\n')
-        self.history.moveCursor(QTextCursor.End)
-        self.set_pause()
+        self.timer.stop()
+        self.logger('Paused Video')
 
     def playVid5(self):
-
-        if videoState == 'play':
-            self.move_frame(1)
+        self.move_frame(1)
 
     def dispNextImg(self):
-        self.history.insertPlainText(
-            'Next Frame: ' + str(current_frame) + '\n')
-        self.history.moveCursor(QTextCursor.End)
+        self.logger('Next Frame: ' + str(current_frame))
         if fileSelected != "":
             self.move_frame(1)
-
-    def set_pause(self):
-        global videoState
-        videoState = 'pause'
 
     def move_frame(self, val):
         global current_frame
@@ -312,43 +291,46 @@ class Window(QMainWindow, Ui_MainWindow):
             current_frame += val
             self.sl.setValue(current_frame)
             self.dispImg()
+            if current_frame == frame_to_stop:
+                self.pauseVideo()
         else:
-            self.set_pause()
+            pass
 
     def dispPrevImg(self):
-        self.history.insertPlainText(
-            'Previous Frame: ' + str(current_frame) + '\n')
-        self.history.moveCursor(QTextCursor.End)
-        self.set_pause()
+        self.logger('Previous Frame: ' + str(current_frame))
         if fileSelected != "":
             self.move_frame(-1)
 
     def dispImg(self):
         global last_frame
-        self.currentFrameDisp.setText('Current Frame: ' + str(current_frame))
-        data = self.h5data.frame(current_frame, 640, 480)
+        try:
+            data = self.h5data.frame(current_frame, 640, 480)
+            self.currentFrameDisp.setText(
+                'Current Frame: ' + str(current_frame))
 
-        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
-        self.maxTempLabel.setText(
-            'Current Max Temp: ' + get_temp_with_unit(maxVal, toggleUnitState))
-        self.maxTempLocLabel.setText('Max Temp Loc: ' + str(maxLoc))
-        self.minTempLabel.setText(
-            'Current Min Temp: ' + get_temp_with_unit(minVal, toggleUnitState))
-        self.minTempLocLabel.setText('Min Temp Loc: ' + str(minLoc))
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
+            self.maxTempLabel.setText(
+                'Current Max Temp: ' + get_temp_with_unit(maxVal, toggleUnitState))
+            self.maxTempLocLabel.setText('Max Temp Loc: ' + str(maxLoc))
+            self.minTempLabel.setText(
+                'Current Min Temp: ' + get_temp_with_unit(minVal, toggleUnitState))
+            self.minTempLocLabel.setText('Min Temp Loc: ' + str(minLoc))
 
-        img = colors.colorize(data, colorMapType)
-        rgbImage = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        self.ax = self.figure.add_subplot(111)
-        self.ax.clear()
+            img = colors.colorize(data, colorMapType)
+            rgbImage = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            self.ax = self.figure.add_subplot(111)
+            self.ax.clear()
 
-        if current_frame == 1:
-            self.figure.tight_layout()
-        self.cax = self.ax.imshow(rgbImage)
-        last_frame = self.h5data.last_frame
-        self.sl.setValue(current_frame)
-        self.currentTimeLabel.setText(
-            'Current Time: ' + str(round(((current_frame-1)/9.00), 2)))
-        cid = self.canvas.mpl_connect('motion_notify_event', self.hover)
+            if current_frame == 1:
+                self.figure.tight_layout()
+            self.cax = self.ax.imshow(rgbImage)
+            last_frame = self.h5data.last_frame
+            self.sl.setValue(current_frame)
+            self.currentTimeLabel.setText(
+                'Current Time: ' + str(round(((current_frame-1)/9.00), 2)))
+            cid = self.canvas.mpl_connect('motion_notify_event', self.hover)
+        except:
+            pass
 
     def colorBarDisplay(self):
         if(fileSelected == ''):
@@ -373,30 +355,41 @@ class Window(QMainWindow, Ui_MainWindow):
             '     [$^\circ$' + toggleUnitState + ']', rotation=0)  # 270
         plt.show()
 
+    def command_line_file_select(self):
+        global fileSelected
+        global usedOnce
+        print("First file specified from command line")
+        fileSelected = sys.argv[1]
+        usedOnce = False
+
+    def dialog_file_select(self):
+        global fileSelected
+        lastFileSelected = ""
+        if fileSelected != "":
+            lastFileSelected = fileSelected
+        fileSelected = ""
+        dlg = QFileDialog()
+        dlg.setDefaultSuffix('.HDF5')
+        fileSelected, filter = dlg.getOpenFileName(
+            self, 'Open File', lastFileSelected, 'HDF5 (*.HDF5);; All Files (*)')
+        print(fileSelected)
+        self.dispSelectedFile.setText(fileSelected)
+
+    def logger(self, text: str):
+        self.history.insertPlainText(text + '\n')
+        self.history.moveCursor(QTextCursor.End)
+        print(text)
+
     def getFile(self):
         global current_frame
-        global fileSelected
         global stop_frame
-        global usedOnce
-        if (len(sys.argv) > 1) and (usedOnce == 1):
-            print("First file specified from command line")
-            fileSelected = sys.argv[1]
-            usedOnce = 0
+        if (len(sys.argv) > 1) and (usedOnce == True):
+            self.command_line_file_select()
         else:
-            lastFileSelected = ""
-            if fileSelected != "":
-                lastFileSelected = fileSelected
-            fileSelected = ""
-            dlg = QFileDialog()
-            dlg.setDefaultSuffix('.HDF5')
-            fileSelected, filter = dlg.getOpenFileName(
-                self, 'Open File', lastFileSelected, 'HDF5 (*.HDF5);; All Files (*)')
-            print(fileSelected)
-            self.dispSelectedFile.setText(fileSelected)
+            self.dialog_file_select()
         if fileSelected != "":
             try:
                 self.dispSelectedFile.setText(fileSelected)
-                # self.h5data = h5py.File(str(fileSelected), 'r')
                 self.h5data = heat_data(fileSelected)
                 current_frame = 1
                 self.dispImg()
@@ -404,21 +397,14 @@ class Window(QMainWindow, Ui_MainWindow):
                 stop_frame = last_frame
                 self.startEdit.setText(str(current_frame))
                 self.stopEdit.setText(str(last_frame))
-                self.history.insertPlainText(
-                    'Selected File and Displayed First Frame\n')
-                self.history.moveCursor(QTextCursor.End)
-                print('Selected File and Displayed First Frame')
+                self.logger('Selected File and Displayed First Frame')
                 self.canvas.draw()
             except:
-                self.history.insertPlainText(
-                    'ERROR: Incorrect File Type Selected\n Please select .HDF5 File\n')
-                self.history.moveCursor(QTextCursor.End)
-                print('Incorrect File Type Selected. Please select .HDF5 File.')
+                self.logger(
+                    'ERROR: Incorrect File Type Selected\n Please select .HDF5 File')
         else:
-            self.history.insertPlainText(
-                'ERROR: Incorrect File Type Selected\n Please select .HDF5 File\n')
-            self.history.moveCursor(QTextCursor.End)
-            print('Incorrect File Type Selected. Please select .HDF5 File.')
+            self.logger(
+                'ERROR: Incorrect File Type Selected\n Please select .HDF5 File')
 
 
 if __name__ == '__main__':
