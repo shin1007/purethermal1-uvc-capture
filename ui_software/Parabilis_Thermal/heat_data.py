@@ -21,6 +21,7 @@ class heat_data(object):
         return self.__last_frame
 
     def frame(self, num, width, height):
+        # images are labeld from "image1" to "image" + len(self.__raw_data)
         raw_frame = self.raw_data[('image' + str(num))][:]
         if(width == 0 or height == 0):
             return raw_frame

@@ -103,18 +103,26 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dispLayout.addWidget(self.toolbar)
         self.dispLayout.addWidget(self.canvas)
 
-        # buttons
-        self.nextFrame.clicked.connect(self.to_next_frame)
-        self.prevFrame.clicked.connect(self.to_previous_frame)
-        self.selectFileBut.clicked.connect(self.dialog_file_select)
-        self.playVidBut.clicked.connect(self.play)
-        self.makeTiffBut.clicked.connect(self.save_tiffs)
+        # BUTTONS
+        self.btnFileSelect.clicked.connect(self.dialog_file_select)
+        self.btnTempScale.clicked.connect(self.figure_with_temp_scale)
 
-        self.sl.valueChanged.connect(self.slValueChange)
-        self.saveCvImageBut.clicked.connect(self.save_png)
-        self.saveAsVideoSS.clicked.connect(self.save_avi)
-        self.pauseVidBut.clicked.connect(self.pauseVideo)
+        # BUTTONS - player controls
+        self.btnNextFrame.clicked.connect(self.to_next_frame)
+        self.btnPrevFrame.clicked.connect(self.to_previous_frame)
+        self.btnPlay.clicked.connect(self.play)
+        self.btnPause.clicked.connect(self.pauseVideo)
 
+        # BUTTONS - saving files
+        self.btnSaveCsvs.clicked.connect(self.save_csvs)
+        self.btnSaveTiffs.clicked.connect(self.save_tiffs)
+        self.btnSavePngs.clicked.connect(self.save_pngs)
+        self.btnSaveAvi.clicked.connect(self.save_avi)
+        self.btnSaveCsv.clicked.connect(self.save_csv)
+        self.btnSaveTiff.clicked.connect(self.save_tiff)
+        self.btnSavePng.clicked.connect(self.save_png)
+
+        # RADIO BUTTONS - temperature
         self.temp_group = QButtonGroup()
         self.temp_group.addButton(self.rdoCelsius)
         self.temp_group.addButton(self.rdoKelvin)
@@ -124,6 +132,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rdoKelvin.clicked.connect(self.in_Kelvin)
         self.rdoCelsius.setChecked(True)
 
+        # RADIO BUTTONS - colormap
         self.color_group = QButtonGroup()
         self.color_group.addButton(self.rdoIronBlack)
         self.color_group.addButton(self.rdoGrayScale)
@@ -133,19 +142,65 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rdoRainbow.clicked.connect(self.to_rainbow)
         self.rdoIronBlack.setChecked(True)
 
-        self.tempScaleBut.clicked.connect(self.colorBarDisplay)
-
+        # EDIT TEXT - start and stop frames
         validator = QIntValidator(self)
         self.startEdit.setValidator(validator)
         self.stopEdit.setValidator(validator)
         self.startEdit.textEdited.connect(self.renew_start_frame)
         self.stopEdit.textEdited.connect(self.renew_stop_frame)
+
+        # SLIDER
+        self.sl.valueChanged.connect(self.slValueChange)
+
+        # TIMER - used when playing video
         self.timer = QTimer(self)
         self.timer.setInterval(timerHz)
         self.timer.timeout.connect(self.playVid5)
 
         if (len(sys.argv) > 1) and (usedOnce == True):
             self.command_line_file_select()
+
+    def enable_buttons(self, bl):
+        self.btnTempScale.setEnabled(bl)
+
+        # BUTTONS - player controls
+        self.btnNextFrame.setEnabled(bl)
+        self.btnPrevFrame.setEnabled(bl)
+        self.btnPlay.setEnabled(bl)
+        self.btnPause.setEnabled(bl)
+
+        # BUTTONS - saving files
+        self.btnSaveCsvs.setEnabled(bl)
+        self.btnSaveTiffs.setEnabled(bl)
+        self.btnSavePngs.setEnabled(bl)
+        self.btnSaveAvi.setEnabled(bl)
+        self.btnSaveCsv.setEnabled(bl)
+        self.btnSaveTiff.setEnabled(bl)
+        self.btnSavePng.setEnabled(bl)
+
+        # RADIO BUTTONS - temperature
+        self.rdoCelsius.setEnabled(bl)
+        self.rdoFahrenheit.setEnabled(bl)
+        self.rdoKelvin.setEnabled(bl)
+        self.rdoCelsius.setChecked(bl)
+
+        # RADIO BUTTONS - colormap
+        self.rdoIronBlack.setEnabled(bl)
+        self.rdoGrayScale.setEnabled(bl)
+        self.rdoRainbow.setEnabled(bl)
+
+        # EDIT TEXT - start and stop frames
+        self.startEdit.setEnabled(bl)
+        self.stopEdit.setEnabled(bl)
+
+        # SLIDER
+        self.sl.setEnabled(bl)
+        return
+
+    def logger(self, text: str):
+        self.history.insertPlainText(text + '\n')
+        self.history.moveCursor(QTextCursor.End)
+        print(text)
 
     def renew_start_frame(self):
         global start_frame
@@ -161,18 +216,63 @@ class Window(QMainWindow, Ui_MainWindow):
         except:
             pass
 
-    # saving functions
-    def save_png(self):
-        saveframe = self.h5data.frame(current_frame, 640, 480)
-        save_as.to_png('test.png', saveframe, colorMapType)
+    # saving multiple frames
+    def dlg_save_multi(self, ext: str):
+        self.pauseVideo()
+        if self.h5data != "":
+            dlg = QFileDialog()
+            dlg.setDefaultSuffix('.' + ext)
+            filename, filter = dlg.getSaveFileName(
+                self.w, 'Navigate to Directory and Choose a File Name to Save To',
+                self.h5data.fullpath + '_' + ext.upper() + '.' + ext,
+                ext.upper() + ' File (*.' + ext + ')')
+        return filename def save_csvs(self):
+        savepath = self.dlg_save_multi('csv')
+        savestem = savepath[:-4]
+        save_as.to_csvs(savestem, self.h5data, start_frame, stop_frame)
 
     def save_tiffs(self):
-        save_as.to_tiffs('test.tif', self.h5data, colorMapType,
+        savepath = self.dlg_save_multi('tif')
+        save_as.to_tiffs(savepath, self.h5data, colorMapType,
                          start_frame, stop_frame)
 
+    def save_pngs(self):
+        savepath = self.dlg_save_multi('png')
+        savestem = savepath[:-4]
+        save_as.to_pngs(savestem, self.h5data, start_frame, stop_frame)
+
     def save_avi(self):
-        save_as.to_avi('test.avi', self.h5data,
+        savepath = self.dlg_save_multi('avi')
+        save_as.to_avi(savepath, self.h5data,
                        colorMapType, start_frame, stop_frame)
+
+    # saving single frame
+    def dlg_save_single(self, frame, ext: str):
+        self.pauseVideo()
+        if self.h5data != "":
+            dlg = QFileDialog()
+            dlg.setDefaultSuffix('.' + ext)
+            filename, filter = dlg.getSaveFileName(
+                self.w, 'Navigate to Directory and Choose a File Name to Save To',
+                self.h5data.fullpath + '_f' +
+                str(frame) + '_' + ext.upper() + '.' + ext,
+                ext.upper() + ' File (*.' + ext + ')')
+        return filename
+
+    def save_csv(self):
+        savepath = self.dlg_save_single(current_frame, 'csv')
+        saveframe = self.h5data.frame(current_frame, 640, 480)
+        save_as.to_csv(savepath, saveframe)
+
+    def save_tiff(self):
+        savepath = self.dlg_save_single(current_frame, 'tif')
+        saveframe = self.h5data.frame(current_frame, 640, 480)
+        save_as.to_tiff(savepath, saveframe, colorMapType)
+
+    def save_png(self):
+        savepath = self.dlg_save_single(current_frame, 'png')
+        saveframe = self.h5data.frame(current_frame, 640, 480)
+        save_as.to_png(savepath, saveframe, colorMapType)
 
     # color functions (on radiobutton click)
     def to_ironblack(self):
@@ -238,14 +338,14 @@ class Window(QMainWindow, Ui_MainWindow):
         return frame[yMouse, xMouse]
 
     def hover(self, event):
-        if event.xdata != None:
+        if event.xdata == None:
+            self.cursorTempLabel.setText('Cursor Temp: MOVE CURSOR OVER IMAGE')
+        else:
             xMouse = int(round(event.xdata))
             yMouse = int(round(event.ydata))
             cursorVal = int(round(self.grabTempValue(xMouse, yMouse)))
             self.cursorTempLabel.setText(
                 'Cursor Temp: ' + get_temp_with_unit(cursorVal, toggleUnitState))
-        else:
-            self.cursorTempLabel.setText('Cursor Temp: MOVE CURSOR OVER IMAGE')
 
     # video playing functions
     def frame_setting_ng(self):
@@ -265,8 +365,7 @@ class Window(QMainWindow, Ui_MainWindow):
         current_frame = start_frame
 
         self.logger('Playing video from Frame: ' + str(start_frame))
-        if self.h5data != "":
-            self.timer.start()
+        self.timer.start()
 
     def playVid5(self):
         self.move_frame(1)
@@ -289,14 +388,12 @@ class Window(QMainWindow, Ui_MainWindow):
             pass
 
     def to_previous_frame(self):
-        if self.h5data != "":
-            self.move_frame(-1)
-            self.logger('Previous Frame: ' + str(current_frame))
+        self.move_frame(-1)
+        self.logger('Previous Frame: ' + str(current_frame))
 
     def to_next_frame(self):
-        if self.h5data != "":
-            self.move_frame(1)
-            self.logger('Next Frame: ' + str(current_frame))
+        self.move_frame(1)
+        self.logger('Next Frame: ' + str(current_frame))
 
     # drawing images
     def renew_image(self):
@@ -330,23 +427,30 @@ class Window(QMainWindow, Ui_MainWindow):
         except:
             pass
 
-    def colorBarDisplay(self):
-        if(self.h5data == ''):
-            return
+    def maxtemp(self):
+        return self.maxTempLabel.text()[18:]
+
+    def mintemp(self):
+        return self.minTempLabel.text()[18:]
+
+    def figure_with_temp_scale(self):
         data = self.h5data.frame(current_frame, 640, 480)
         img = colors.colorize(data, colorMapType)
         rgbImage = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # colormap of the bar
         C = colors.get_color_map(colorMapType)
         C = np.squeeze(C)
         C = C[..., ::-1]
         C2 = C/255.0
         ccm = ListedColormap(C2)
+
         fig = plt.figure()
         plt.title('Frame: ' + str(current_frame) + '   Max Temp: ' +
-                  get_temp_with_unit(toggleUnitState, 'max'))
+                  self.maxtemp())
         bounds = [0, 50, 100]
-        im = plt.imshow(rgbImage, cmap=ccm, clim=(calc_temp(
-            toggleUnitState, 'min'), calc_temp(toggleUnitState, 'max')))
+        im = plt.imshow(rgbImage, cmap=ccm,
+                        clim=(self.maxtemp()[:-2], self.mintemp()[:-2]))
         cbar = fig.colorbar(im)
         cbar.ax.minorticks_on()
         limits = cbar.get_clim()
@@ -354,7 +458,7 @@ class Window(QMainWindow, Ui_MainWindow):
             '     [$^\circ$' + toggleUnitState + ']', rotation=0)  # 270
         plt.show()
 
-    # file selection
+    # opening hdf5 file
     def command_line_file_select(self):
         global usedOnce
         print("First file specified from command line")
@@ -371,17 +475,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dispSelectedFile.setText(path)
         self.open_file(path)
 
-    def logger(self, text: str):
-        self.history.insertPlainText(text + '\n')
-        self.history.moveCursor(QTextCursor.End)
-        print(text)
-
     def open_file(self, path):
         global current_frame
         global last_frame
         global stop_frame
-        if path != "":
+        if path == "":
+            self.logger('Please select .HDF5 File')
+            return
+        else:
             try:
+                self.enable_buttons(True)
                 self.dispSelectedFile.setText(path)
                 self.h5data = heat_data(path)
                 current_frame = 1
@@ -394,11 +497,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.logger('Selected File and Displayed First Frame')
                 self.canvas.draw()
             except:
-                self.logger(
-                    'ERROR: Incorrect File Type Selected\n Please select .HDF5 File')
-        else:
-            self.logger(
-                'ERROR: Incorrect File Type Selected\n Please select .HDF5 File')
+                self.logger('Please select .HDF5 File')
 
 
 if __name__ == '__main__':

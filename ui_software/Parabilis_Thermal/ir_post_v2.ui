@@ -73,7 +73,7 @@
       <item>
        <widget class="QSlider" name="sl">
         <property name="enabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="minimumSize">
          <size>
@@ -89,9 +89,9 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
-         <widget class="QPushButton" name="prevFrame">
+         <widget class="QPushButton" name="btnPrevFrame">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>Previous Frame</string>
@@ -99,9 +99,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="playVidBut">
+         <widget class="QPushButton" name="btnPlay">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>Play</string>
@@ -109,9 +109,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pauseVidBut">
+         <widget class="QPushButton" name="btnPause">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>Pause</string>
@@ -119,9 +119,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="nextFrame">
+         <widget class="QPushButton" name="btnNextFrame">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>Next Frame</string>
@@ -206,7 +206,7 @@
        <enum>QLayout::SetMaximumSize</enum>
       </property>
       <item>
-       <widget class="QPushButton" name="selectFileBut">
+       <widget class="QPushButton" name="btnFileSelect">
         <property name="maximumSize">
          <size>
           <width>16777215</width>
@@ -228,6 +228,9 @@
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <widget class="QRadioButton" name="rdoGrayScale">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>GrayScale</string>
           </property>
@@ -235,6 +238,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="rdoIronBlack">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>IronBlack</string>
           </property>
@@ -242,6 +248,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="rdoRainbow">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Rainbow</string>
           </property>
@@ -286,7 +295,7 @@
         <item>
          <widget class="QLineEdit" name="startEdit">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string/>
@@ -296,7 +305,7 @@
         <item>
          <widget class="QLineEdit" name="stopEdit">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string/>
@@ -308,16 +317,19 @@
       <item>
        <layout class="QHBoxLayout" name="hrz_Video">
         <item>
-         <widget class="QPushButton" name="btnCsvVid">
+         <widget class="QPushButton" name="btnSaveCsvs">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>CSV</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="makeTiffBut">
+         <widget class="QPushButton" name="btnSaveTiffs">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>TIFF</string>
@@ -325,9 +337,19 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="saveAsVideoSS">
+         <widget class="QPushButton" name="btnSavePngs">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>PNG</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnSaveAvi">
+          <property name="enabled">
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>AVI</string>
@@ -367,23 +389,29 @@
       <item>
        <layout class="QHBoxLayout" name="hrz_SignleFrame">
         <item>
-         <widget class="QPushButton" name="btnCsvPic">
+         <widget class="QPushButton" name="btnSaveCsv">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>CSV</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btnTiffPic">
+         <widget class="QPushButton" name="btnSaveTiff">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>TIFF</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="saveCvImageBut">
+         <widget class="QPushButton" name="btnSavePng">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>PNG</string>
@@ -393,9 +421,9 @@
        </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="tempScaleBut">
+       <widget class="QPushButton" name="btnTempScale">
         <property name="enabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="text">
          <string>Generate Figure with Temp Scale</string>
@@ -413,6 +441,9 @@
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
          <widget class="QRadioButton" name="rdoKelvin">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Kelvin</string>
           </property>
@@ -420,6 +451,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="rdoCelsius">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Celsius</string>
           </property>
@@ -427,6 +461,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="rdoFahrenheit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Fahranheit</string>
           </property>
