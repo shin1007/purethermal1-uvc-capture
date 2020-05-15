@@ -40,7 +40,7 @@ def to_pngs(stem, data, colormap, start, end):
         savepath = stem + 'f_' + str(i) + '.png'
         frame = data.frame(i, 640, 480)
         to_png(savepath, frame, colormap)
-    print('Finished saving csv files')
+    print('Finished saving png files')
     return
 
 

@@ -23,7 +23,7 @@ install_thermal_dependencies(){
 install_thermal_app(){
 
     echo "Installing and building thermal app."
-    git clone https://github.com/Kheirlb/purethermal1-uvc-capture.git
+    git clone https://github.com/shin1007/purethermal1-uvc-capture.git
     cd purethermal1-uvc-capture
     cd ui_software
     git clone https://github.com/groupgets/libuvc

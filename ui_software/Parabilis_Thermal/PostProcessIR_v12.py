@@ -226,7 +226,9 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.w, 'Navigate to Directory and Choose a File Name to Save To',
                 self.h5data.fullpath + '_' + ext.upper() + '.' + ext,
                 ext.upper() + ' File (*.' + ext + ')')
-        return filename def save_csvs(self):
+        return filename
+
+    def save_csvs(self):
         savepath = self.dlg_save_multi('csv')
         savestem = savepath[:-4]
         save_as.to_csvs(savestem, self.h5data, start_frame, stop_frame)
@@ -239,7 +241,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def save_pngs(self):
         savepath = self.dlg_save_multi('png')
         savestem = savepath[:-4]
-        save_as.to_pngs(savestem, self.h5data, start_frame, stop_frame)
+        save_as.to_pngs(savestem, self.h5data, colorMapType,
+                        start_frame, stop_frame)
 
     def save_avi(self):
         savepath = self.dlg_save_multi('avi')
