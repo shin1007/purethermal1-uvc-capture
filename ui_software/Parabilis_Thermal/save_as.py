@@ -23,6 +23,7 @@ def to_tiffs(savepath, data, colormap, start, end):
         for i in range(1, data.last_frame):
             frame = data.frame(i, 640, 480)
             bgr = colors.colorize(frame, colormap)
+            # BGR2RGB conversion because of "Image.fromarray"
             rgb_image = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
             images.append(Image.fromarray(rgb_image))
 
@@ -74,8 +75,7 @@ def to_csv(savepath, frame):
 def to_tiff(savepath, frame, colormap):
     try:
         bgr = colors.colorize(frame, colormap)
-        rgb_image = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-        rgb_image.save(savepath, compression='tiff_deflate')
+        cv2.imwrite(savepath, bgr)
         print('Saved ' + savepath)
     except:
         print('Error while saving ' + savepath)
