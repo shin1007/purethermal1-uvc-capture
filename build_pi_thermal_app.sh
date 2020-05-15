@@ -38,7 +38,7 @@ install_thermal_app(){
 
     echo "Installing and building thermal app."
     sudo apt install git -y
-    git clone https://github.com/Kheirlb/purethermal1-uvc-capture.git
+    git clone https://github.com/shin1007/purethermal1-uvc-capture.git
     git clone https://github.com/groupgets/libuvc
     sudo apt-get install cmake -y
     sudo apt-get install libusb-1.0-0-dev -y
