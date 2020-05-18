@@ -182,7 +182,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Start Recording Data</string>
+             <string>Start / Stop Recording Data</string>
             </property>
            </widget>
           </item>
