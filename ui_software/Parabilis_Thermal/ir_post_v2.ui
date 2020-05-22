@@ -317,9 +317,23 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="btnCurrentStart">
+          <property name="text">
+           <string>Use Current</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="label_11">
           <property name="text">
            <string>Stop Frame:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnCurrentStop">
+          <property name="text">
+           <string>Use Current</string>
           </property>
          </widget>
         </item>

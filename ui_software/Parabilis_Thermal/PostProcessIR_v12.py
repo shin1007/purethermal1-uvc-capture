@@ -101,12 +101,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dispLayout.addWidget(self.toolbar)
         self.dispLayout.addWidget(self.canvas)
 
-        # BUTTONS
+        # BUTTONS - files
         self.btnFileSelect.clicked.connect(self.dialog_file_select)
         self.btnFolder.clicked.connect(self.open_folder)
         self.btnPrev.clicked.connect(self.prev_file)
         self.btnNext.clicked.connect(self.next_file)
         self.btnTempScale.clicked.connect(self.figure_with_temp_scale)
+
+        # BUTTONS - current frame to start/stop frame
+        self.btnCurrentStart.clicked.connect(self.current2start)
+        self.btnCurrentStop.clicked.connect(self.current2stop)
 
         # BUTTONS - player controls
         self.btnNextFrame.clicked.connect(self.to_next_frame)
@@ -198,6 +202,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.history.moveCursor(QTextCursor.End)
         print(text)
 
+    # start and stop frame
     def renew_start_frame(self):
         global start_frame
         try:
@@ -212,32 +217,15 @@ class Window(QMainWindow, Ui_MainWindow):
         except:
             pass
 
+    def current2start(self):
+        self.startEdit.setText(str(current_frame))
+        self.renew_start_frame()
+
+    def current2stop(self):
+        self.stopEdit.setText(str(current_frame))
+        self.renew_stop_frame()
+
     # saving multiple frames
-    def open_folder(self):
-        path = QFileDialog.getExistingDirectory(
-            self.widget, 'Open File Directory', '/')
-        self.folder = path
-        self.files = glob.glob(path + "/*.HDF5")
-        self.filenum = 0
-        if(len(self.files) == 0):
-            print('no HDF5 file in selected folder')
-            return
-        self.enable_buttons
-        self.open_file(self.files[0])
-
-    def prev_file(self):
-        try:
-            self.filenum -= 1
-            self.open_file(self.files[self.filenum])
-        except:
-            pass
-
-    def next_file(self):
-        try:
-            self.filenum += 1
-            self.open_file(self.files[self.filenum])
-        except:
-            pass
 
     def save_multi_frames(self):
         if(self.chkCSVs.checkState()):
@@ -476,6 +464,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dispSelectedFile.setText(path)
         self.open_file(path)
 
+    # BUTTONS on the top
     def open_file(self, path):
         global current_frame
         global last_frame
@@ -499,6 +488,32 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.canvas.draw()
             except:
                 self.logger('Please select .HDF5 File')
+
+    def open_folder(self):
+        path = QFileDialog.getExistingDirectory(
+            self.widget, 'Open File Directory', '/')
+        self.folder = path
+        self.files = glob.glob(path + "/*.HDF5")
+        self.filenum = 0
+        if(len(self.files) == 0):
+            print('no HDF5 file in selected folder')
+            return
+        self.enable_buttons
+        self.open_file(self.files[0])
+
+    def prev_file(self):
+        try:
+            self.filenum -= 1
+            self.open_file(self.files[self.filenum])
+        except:
+            pass
+
+    def next_file(self):
+        try:
+            self.filenum += 1
+            self.open_file(self.files[self.filenum])
+        except:
+            pass
 
 
 if __name__ == '__main__':

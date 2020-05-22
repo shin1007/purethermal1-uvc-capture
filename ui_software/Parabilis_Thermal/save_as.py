@@ -75,8 +75,10 @@ def to_csv(savepath, frame):
 def to_tiff(savepath, frame, colormap):
     try:
         bgr = colors.colorize(frame, colormap)
-        cv2.imwrite(savepath, bgr)
-        print('Saved ' + savepath)
+        if(cv2.imwrite(savepath, bgr)):
+            print('Saved ' + savepath)
+        else:
+            print('Error while saving ' + savepath)
     except:
         print('Error while saving ' + savepath)
     return
@@ -85,8 +87,10 @@ def to_tiff(savepath, frame, colormap):
 def to_png(savepath, frame, colormap):
     try:
         bgr = colors.colorize(frame, colormap)
-        cv2.imwrite(savepath, bgr)
-        print('Saved ' + savepath)
+        if (cv2.imwrite(savepath, bgr)):
+            print('Saved ' + savepath)
+        else:
+            print('Error while saving ' + savepath)
     except:
         print('Error while saving ' + savepath)
     return

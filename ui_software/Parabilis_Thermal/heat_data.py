@@ -1,6 +1,6 @@
 import h5py
 import cv2
-import os
+from pathlib import Path
 
 
 class heat_data(object):
@@ -15,7 +15,7 @@ class heat_data(object):
 
     @property
     def basename(self):
-        return os.path.basename(self.__fullpath)
+        return Path(self.__fullpath).name
 
     @property
     def raw_data(self):
