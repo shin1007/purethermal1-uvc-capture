@@ -109,16 +109,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btnPause">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Pause</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="btnNextFrame">
           <property name="enabled">
            <bool>false</bool>
@@ -133,61 +123,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QLabel" name="slStartF">
-          <property name="text">
-           <string>Please Select File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="slMidF">
-          <property name="text">
-           <string>Please Select File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QLabel" name="slEndF">
-          <property name="text">
-           <string>Please Select File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="slStartT">
-          <property name="text">
-           <string>Please Select File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="slMidT">
-          <property name="text">
-           <string>Please Select File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="slEndT">
           <property name="text">
            <string>Please Select File</string>
           </property>
@@ -290,6 +226,13 @@
        </layout>
       </item>
       <item>
+       <widget class="Line" name="line_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <item>
          <widget class="QLabel" name="label_3">
@@ -299,13 +242,6 @@
          </widget>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="Line" name="line_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -318,6 +254,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="btnCurrentStart">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Use Current</string>
           </property>
@@ -332,6 +271,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="btnCurrentStop">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Use Current</string>
           </property>

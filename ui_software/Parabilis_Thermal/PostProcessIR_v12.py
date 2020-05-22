@@ -115,8 +115,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # BUTTONS - player controls
         self.btnNextFrame.clicked.connect(self.to_next_frame)
         self.btnPrevFrame.clicked.connect(self.to_previous_frame)
-        self.btnPlay.clicked.connect(self.play)
-        self.btnPause.clicked.connect(self.pauseVideo)
+        self.btnPlay.clicked.connect(self.play_or_pause)
 
         # BUTTONS - saving files
         self.btnMultiConvert.clicked.connect(self.save_multi_frames)
@@ -155,7 +154,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # TIMER - used when playing video
         self.timer = QTimer(self)
         self.timer.setInterval(timerHz)
-        self.timer.timeout.connect(self.playVid5)
+        self.timer.timeout.connect(self.move1frame)
 
         if (len(sys.argv) > 1) and (usedOnce == True):
             self.command_line_file_select()
@@ -167,11 +166,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.btnNextFrame.setEnabled(bl)
         self.btnPrevFrame.setEnabled(bl)
         self.btnPlay.setEnabled(bl)
-        self.btnPause.setEnabled(bl)
 
         # BUTTONS - saving files
         self.btnSingleConvert.setEnabled(bl)
         self.btnMultiConvert.setEnabled(bl)
+
+        # BUTTONS - current frame to start/stop frame
+        self.btnCurrentStart.setEnabled(bl)
+        self.btnCurrentStop.setEnabled(bl)
 
         # BUTTONS - open another file
         self.btnPrev.setEnabled(bl)
@@ -314,12 +316,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sl.setValue(1)
         self.sl.setTickPosition(QSlider.TicksBelow)
         self.sl.setTickInterval(9)
-        self.slStartF.setText('First Frame: 1')
-        self.slMidF.setText('Mid Frame: ' + str(round(last_frame/2)))
-        self.slEndF.setText('Last Frame: ' + str(last_frame))
-        self.slStartT.setText('0 Seconds')
-        self.slMidT.setText(str(round(last_frame/(2*9), 1)) + ' Seconds')
-        self.slEndT.setText(str(round(last_frame/9, 1)) + ' Seconds')
+        self.slEndF.setText('Last Frame: ' + str(last_frame) +
+                            ' (' + str(round(last_frame/9, 1)) + ' Seconds)')
 
     # on hovering on the picture
     def grabTempValue(self, xMouse, yMouse):
@@ -346,20 +344,26 @@ class Window(QMainWindow, Ui_MainWindow):
             self.logger('Frame setting is wrong')
             return True
 
-    def play(self):
+    def play_or_pause(self):
+        if self.timer.isActive():
+            self.pause_video()
+            self.btnPlay.setText('Play')
+        else:
+            self.play_video()
+            self.btnPlay.setText('Pause')
+
+    def play_video(self):
         if(self.frame_setting_ng()):
             return
 
         global current_frame
-        current_frame = start_frame
-
-        self.logger('Playing video from Frame: ' + str(start_frame))
+        self.logger('Playing video from Frame: ' + str(current_frame))
         self.timer.start()
 
-    def playVid5(self):
+    def move1frame(self):
         self.move_frame(1)
 
-    def pauseVideo(self):
+    def pause_video(self):
         self.timer.stop()
         self.logger('Paused Video')
 
@@ -372,7 +376,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.sl.setValue(current_frame)
             self.renew_image()
             if current_frame == frame_to_stop:
-                self.pauseVideo()
+                self.pause_video()
         else:
             pass
 
