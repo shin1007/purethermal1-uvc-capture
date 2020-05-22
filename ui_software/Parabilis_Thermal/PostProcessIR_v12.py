@@ -28,6 +28,7 @@ import time
 import re
 import glob
 import warnings
+import os
 import colors
 import save_as
 from heat_data import heat_data
@@ -102,6 +103,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # BUTTONS
         self.btnFileSelect.clicked.connect(self.dialog_file_select)
+        self.btnFolder.clicked.connect(self.open_folder)
+        self.btnPrev.clicked.connect(self.prev_file)
+        self.btnNext.clicked.connect(self.next_file)
         self.btnTempScale.clicked.connect(self.figure_with_temp_scale)
 
         # BUTTONS - player controls
@@ -111,13 +115,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.btnPause.clicked.connect(self.pauseVideo)
 
         # BUTTONS - saving files
-        self.btnSaveCsvs.clicked.connect(self.save_csvs)
-        self.btnSaveTiffs.clicked.connect(self.save_tiffs)
-        self.btnSavePngs.clicked.connect(self.save_pngs)
-        self.btnSaveAvi.clicked.connect(self.save_avi)
-        self.btnSaveCsv.clicked.connect(self.save_csv)
-        self.btnSaveTiff.clicked.connect(self.save_tiff)
-        self.btnSavePng.clicked.connect(self.save_png)
+        self.btnMultiConvert.clicked.connect(self.save_multi_frames)
+        self.btnSingleConvert.clicked.connect(self.save_single_frame)
 
         # RADIO BUTTONS - temperature
         self.temp_group = QButtonGroup()
@@ -154,8 +153,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.timer.setInterval(timerHz)
         self.timer.timeout.connect(self.playVid5)
 
-        self.hogehoge.clicked.connect(self.hogefunc)
-
         if (len(sys.argv) > 1) and (usedOnce == True):
             self.command_line_file_select()
 
@@ -169,13 +166,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.btnPause.setEnabled(bl)
 
         # BUTTONS - saving files
-        self.btnSaveCsvs.setEnabled(bl)
-        self.btnSaveTiffs.setEnabled(bl)
-        self.btnSavePngs.setEnabled(bl)
-        self.btnSaveAvi.setEnabled(bl)
-        self.btnSaveCsv.setEnabled(bl)
-        self.btnSaveTiff.setEnabled(bl)
-        self.btnSavePng.setEnabled(bl)
+        self.btnSingleConvert.setEnabled(bl)
+        self.btnMultiConvert.setEnabled(bl)
+
+        # BUTTONS - open another file
+        self.btnPrev.setEnabled(bl)
+        self.btnNext.setEnabled(bl)
 
         # RADIO BUTTONS - temperature
         self.rdoCelsius.setEnabled(bl)
@@ -217,67 +213,70 @@ class Window(QMainWindow, Ui_MainWindow):
             pass
 
     # saving multiple frames
-    def dlg_save_multi(self, ext: str):
-        self.pauseVideo()
-        if self.h5data != "":
-            dlg = QFileDialog()
-            dlg.setDefaultSuffix('.' + ext)
-            filename, filter = dlg.getSaveFileName(
-                self.widget, 'Navigate to Directory and Choose a File Name to Save To',
-                self.h5data.fullpath + '_' + ext.upper() + '.' + ext,
-                ext.upper() + ' File (*.' + ext + ')')
-        return filename
+    def open_folder(self):
+        path = QFileDialog.getExistingDirectory(
+            self.widget, 'Open File Directory', '/')
+        self.folder = path
+        self.files = glob.glob(path + "/*.HDF5")
+        self.filenum = 0
+        if(len(self.files) == 0):
+            print('no HDF5 file in selected folder')
+            return
+        self.enable_buttons
+        self.open_file(self.files[0])
 
-    def save_csvs(self):
-        savepath = self.dlg_save_multi('csv')
-        savestem = savepath[:-4]
-        save_as.to_csvs(savestem, self.h5data, start_frame, stop_frame)
+    def prev_file(self):
+        try:
+            self.filenum -= 1
+            self.open_file(self.files[self.filenum])
+        except:
+            pass
 
-    def save_tiffs(self):
-        savepath = self.dlg_save_multi('tif')
-        save_as.to_tiffs(savepath, self.h5data, colorMapType,
-                         start_frame, stop_frame)
+    def next_file(self):
+        try:
+            self.filenum += 1
+            self.open_file(self.files[self.filenum])
+        except:
+            pass
 
-    def save_pngs(self):
-        savepath = self.dlg_save_multi('png')
-        savestem = savepath[:-4]
-        save_as.to_pngs(savestem, self.h5data, colorMapType,
-                        start_frame, stop_frame)
+    def save_multi_frames(self):
+        if(self.chkCSVs.checkState()):
+            # ディレクトリがなければ作成
+            if not(os.path.exists(self.folder + './csv')):
+                os.mkdir(self.folder + './csv')
+            savestem = self.folder + '\\csv\\' + self.h5data.basename
+            save_as.to_csvs(savestem, self.h5data, start_frame, stop_fr
+                            ame)
+        if(self.chkTIFFs.checkState()):
+            savepath = self.h5data.fullpath + '.tiff'
+            save_as.to_tiffs(savepath, self.h5data,
+                             colorMapType, start_frame, stop_frame)
+        if(self.chkPNGs.checkState()):
+            # ディレクトリがなければ作成
+            if not(os.path.exists(self.folder + './png')):
+                os.mkdir(self.folder + './png')
+            savestem = self.folder + '\\png\\' + self.h5data.basename
+            save_as.to_pngs(savestem, self.h5data,
+                            colorMapType, start_frame, stop_frame)
+        if(self.chkAVI.checkState()):
+            savepath = self.h5data.fullpath + '.avi'
+            save_as.to_avi(savepath, self.h5data,
+                           colorMapType, start_frame, stop_frame)
+        return
 
-    def save_avi(self):
-        savepath = self.dlg_save_multi('avi')
-        save_as.to_avi(savepath, self.h5data,
-                       colorMapType, start_frame, stop_frame)
-
-    # saving single frame
-    def dlg_save_single(self, frame, ext: str):
-        self.pauseVideo()
-        if self.h5data != "":
-            dlg = QFileDialog()
-            dlg.setDefaultSuffix('.' + ext)
-            filename, filter = dlg.getSaveFileName(
-                self.widget, 'Navigate to Directory and Choose a File Name to Save To',
-                self.h5data.fullpath + '_f' +
-                str(frame) + '_' + ext.upper() + '.' + ext,
-                ext.upper() + ' File (*.' + ext + ')')
-        return filename
-
-    def save_csv(self):
-        savepath = self.dlg_save_single(current_frame, 'csv')
+    def save_single_frame(self):
         saveframe = self.h5data.frame(current_frame, 640, 480)
-        save_as.to_csv(savepath, saveframe)
-
-    def save_tiff(self):
-        savepath = self.dlg_save_single(current_frame, 'tif')
-        saveframe = self.h5data.frame(current_frame, 640, 480)
-        save_as.to_tiff(savepath, saveframe, colorMapType)
-
-    def save_png(self):
-        savepath = self.dlg_save_single(current_frame, 'png')
-        saveframe = self.h5data.frame(current_frame, 640, 480)
-        save_as.to_png(savepath, saveframe, colorMapType)
+        savestem = self.folder + '\\' + self.h5data.basename + '_f' + current_frame
+        if(self.chkCSV.checkState()):
+            save_as.to_csv(savestem + '.csv', saveframe)
+        if(self.chkTIFF.checkState()):
+            save_as.to_tiff(savestem + '.tif', saveframe, colorMapType)
+        if(self.chkPNG.checkState()):
+            save_as.to_png(savestem + '.png', saveframe, colorMapType)
+        return
 
     # color functions (on radiobutton click)
+
     def to_ironblack(self):
         global colorMapType
         colorMapType = 'ironblack'
@@ -501,25 +500,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.canvas.draw()
             except:
                 self.logger('Please select .HDF5 File')
-
-    def hogefunc(self, path):
-        path = QFileDialog.getExistingDirectory(
-            self.widget, 'Open File Directory', '/')
-        print(path)
-        files = glob.glob(path + "/*.HDF5")
-        # files = glob.glob(path + "/*")
-        # print(files)
-
-        for file in files:
-            f = file
-            self.dispSelectedFile.setText(f)
-            self.open_file(f)
-
-            data = self.h5data
-            start = 1
-            end = data.last_frame
-            save_as.to_csvs(f, data, start, end)
-            save_as.to_avi(f + '.avi', data, colorMapType, start, end)
 
 
 if __name__ == '__main__':
