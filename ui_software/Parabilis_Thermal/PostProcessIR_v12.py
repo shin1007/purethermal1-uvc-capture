@@ -245,8 +245,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if not(os.path.exists(self.folder + './csv')):
                 os.mkdir(self.folder + './csv')
             savestem = self.folder + '\\csv\\' + self.h5data.basename
-            save_as.to_csvs(savestem, self.h5data, start_frame, stop_fr
-                            ame)
+            save_as.to_csvs(savestem, self.h5data, start_frame, stop_frame)
         if(self.chkTIFFs.checkState()):
             savepath = self.h5data.fullpath + '.tiff'
             save_as.to_tiffs(savepath, self.h5data,
