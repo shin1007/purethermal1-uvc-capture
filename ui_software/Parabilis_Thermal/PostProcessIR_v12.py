@@ -230,38 +230,51 @@ class Window(QMainWindow, Ui_MainWindow):
     # saving multiple frames
 
     def save_multi_frames(self):
+        self.enable_buttons(False)
         if(self.chkCSVs.checkState()):
             # ディレクトリがなければ作成
             if not(os.path.exists(self.folder + './csv')):
                 os.mkdir(self.folder + './csv')
-            savestem = self.folder + '\\csv\\' + self.h5data.basename
-            save_as.to_csvs(savestem, self.h5data, start_frame, stop_frame)
+            savestem = self.folder + '/csv/' + self.h5data.basename
+            log = save_as.to_csvs(savestem, self.h5data,
+                                  start_frame, stop_frame)
+            self.logger(log)
         if(self.chkTIFFs.checkState()):
             savepath = self.h5data.fullpath + '.tiff'
-            save_as.to_tiffs(savepath, self.h5data,
-                             colorMapType, start_frame, stop_frame)
+            log = save_as.to_tiffs(savepath, self.h5data,
+                                   colorMapType, start_frame, stop_frame)
+            self.logger(log)
+
         if(self.chkPNGs.checkState()):
             # ディレクトリがなければ作成
             if not(os.path.exists(self.folder + './png')):
                 os.mkdir(self.folder + './png')
-            savestem = self.folder + '\\png\\' + self.h5data.basename
-            save_as.to_pngs(savestem, self.h5data,
-                            colorMapType, start_frame, stop_frame)
+            savestem = self.folder + '/png/' + self.h5data.basename
+            log = save_as.to_pngs(savestem, self.h5data,
+                                  colorMapType, start_frame, stop_frame)
+            self.logger(log)
         if(self.chkAVI.checkState()):
             savepath = self.h5data.fullpath + '.avi'
-            save_as.to_avi(savepath, self.h5data,
-                           colorMapType, start_frame, stop_frame)
+            log = save_as.to_avi(savepath, self.h5data,
+                                 colorMapType, start_frame, stop_frame)
+            self.logger(log)
+        self.enable_buttons(True)
         return
 
     def save_single_frame(self):
         saveframe = self.h5data.frame(current_frame, 640, 480)
         savestem = self.folder + '\\' + self.h5data.basename + '_f' + current_frame
+        self.enable_buttons(False)
         if(self.chkCSV.checkState()):
-            save_as.to_csv(savestem + '.csv', saveframe)
+            log = save_as.to_csv(savestem + '.csv', saveframe)
+            self.logger(log)
         if(self.chkTIFF.checkState()):
-            save_as.to_tiff(savestem + '.tif', saveframe, colorMapType)
+            log = save_as.to_tiff(savestem + '.tif', saveframe, colorMapType)
+            self.logger(log)
         if(self.chkPNG.checkState()):
-            save_as.to_png(savestem + '.png', saveframe, colorMapType)
+            log = save_as.to_png(savestem + '.png', saveframe, colorMapType)
+            self.logger(log)
+        self.enable_buttons(True)
         return
 
     # color functions (on radiobutton click)
@@ -369,15 +382,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def move_frame(self, val):
         global current_frame
-        frame_to_stop = min(stop_frame, last_frame)
         if ((val < 0 and current_frame > 1)
-                or(val > 0 and current_frame < frame_to_stop)):
+                or(val > 0 and current_frame < last_frame)):
             current_frame += val
             self.sl.setValue(current_frame)
             self.renew_image()
-            if current_frame == frame_to_stop:
+            if current_frame == last_frame:
                 self.pause_video()
         else:
+            self.pause_video()
             pass
 
     def to_previous_frame(self):
@@ -502,22 +515,41 @@ class Window(QMainWindow, Ui_MainWindow):
         if(len(self.files) == 0):
             print('no HDF5 file in selected folder')
             return
-        self.enable_buttons
+        self.renew_file_number()
+        self.enable_buttons(True)
         self.open_file(self.files[0])
 
     def prev_file(self):
         try:
-            self.filenum -= 1
-            self.open_file(self.files[self.filenum])
+            self.pause_video()
+            if(self.filenum > 0):
+                self.filenum -= 1
+                self.open_file(self.files[self.filenum])
+                self.renew_file_number()
+            elif(self.filenum == 0):
+                self.filenum = len(self.files) - 1
+                self.open_file(self.files[self.filenum])
+                self.renew_file_number()
         except:
             pass
 
     def next_file(self):
         try:
-            self.filenum += 1
-            self.open_file(self.files[self.filenum])
+            self.pause_video()
+            if(self.filenum < len(self.files) - 1):
+                self.filenum += 1
+                self.open_file(self.files[self.filenum])
+                self.renew_file_number()
+            elif(self.filenum == len(self.files) - 1):
+                self.filenum = 0
+                self.open_file(self.files[self.filenum])
+                self.renew_file_number()
         except:
             pass
+
+    def renew_file_number(self):
+        result = str(self.filenum + 1) + ' of ' + str(len(self.files))
+        self.lblFile.setText(result)
 
 
 if __name__ == '__main__':
